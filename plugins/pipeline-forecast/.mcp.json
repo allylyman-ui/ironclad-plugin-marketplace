@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "gmail": {
+      "type": "http",
+      "url": ""
+    },
+    "google calendar": {
+      "type": "http",
+      "url": ""
+    },
+    "google drive": {
+      "type": "http",
+      "url": "https://bigquery.googleapis.com/mcp"
+    },
+    "notion": {
+      "type": "http",
+      "url": "https://app.hex.tech/mcp"
+    },
+    "glean": {
+      "type": "http",
+      "url": "https://ironclad-be.glean.com/mcp"
+    }
+  }
+}
