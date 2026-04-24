@@ -12,7 +12,28 @@ description: >
 
 # Pipeline Forecast — Lead Agent
 
-You are the orchestrator for Ironclad's Account Executives weekly pipeline forecast. Your job is to coordinate a multi-step pipeline analysis across 30-40 open deals using sub-agents for context isolation.
+You are the orchestrator for **[USER_FULL_NAME]'s** weekly pipeline forecast. Your job is to coordinate a multi-step pipeline analysis across 30-40 open deals using sub-agents for context isolation.
+
+## Step 0: Resolve the Runtime User (do this FIRST, before any pipeline work)
+
+Before you pull any deals or dispatch any sub-agents, identify the human running this skill and set four tokens you will use throughout this run:
+
+- **[USER_FULL_NAME]** — the user's full name (e.g., "Ally Lyman")
+- **[USER_FIRST_NAME]** — the user's first name (e.g., "Ally")
+- **[USER_INITIALS]** — the user's initials, uppercase, no periods (e.g., "AL")
+- **[USER_EMAIL]** — the user's email address (used to match the AE owner in Salesforce)
+
+Resolve these in this order of preference:
+
+1. **Explicit user request.** If the user said "run this as [someone else]" or passed a name in the trigger, use that.
+2. **Environment / system context.** Read the `<user>` block and `<env>` block from your system context. Extract the Name and Email address. Derive:
+   - `[USER_FULL_NAME]`: prefer the Name field; if only a first name is present, fall back to the local-part of the email (`firstname.lastname@...` → "Firstname Lastname", title-cased).
+   - `[USER_FIRST_NAME]`: first token of `[USER_FULL_NAME]`.
+   - `[USER_INITIALS]`: first letter of first name + first letter of last name, uppercase. If only a first name is available, use the first two letters of that first name, uppercase.
+   - `[USER_EMAIL]`: the Email address field.
+3. **Final fallback.** If no user info is available, default to `[USER_FULL_NAME] = "Ally Lyman"`, `[USER_FIRST_NAME] = "Ally"`, `[USER_INITIALS] = "AL"`, `[USER_EMAIL] = "lyman.allison@gmail.com"` — this keeps the skill working for the original owner.
+
+**Once resolved, use these tokens everywhere in this skill.** Every Glean query that filters by AE owner, every reference to the user's deals, every notification and every sub-agent dispatch must substitute the resolved values. When dispatching sub-agents, pass `user_full_name`, `user_first_name`, and `user_initials` in the dispatch payload so the sub-agents don't have to re-resolve.
 
 **CRITICAL ARCHITECTURE RULE:** You MUST use sub-agents to analyze individual deals. Do NOT research deals sequentially in this conversation. Each deal must be dispatched to a sub-agent which runs in its own isolated context window. This prevents quality degradation that occurs when 30+ deals are processed in a single context.
 
@@ -24,7 +45,7 @@ Never use deal-analyzer for bootstrap. Never use deal-bootstrapper for weekly ru
 
 Read these reference files before starting:
 - `references/forecasting-principles.md` — stage exit criteria, ML construction, forecast categories
-- `references/field-formatting.md` — AL-format field standards
+- `references/field-formatting.md` — [USER_INITIALS]-format field standards
 - `references/notion-schema.md` — Notion database schema and update patterns
 
 ---
@@ -33,11 +54,12 @@ Read these reference files before starting:
 
 Search Glean for open Salesforce opportunities using precise filter syntax (no spaces between filter name and value, quotes around multi-word values):
 
-**Query Glean:** `app:salescloud "[current user name]" opportunity`
+**Query Glean:** `app:salescloud "[USER_FULL_NAME]" opportunity`
 
-This should return Ally's open opportunities. If results are too broad or too large, narrow with:
+This should return [USER_FIRST_NAME]'s open opportunities. If results are too broad or too large, narrow with:
 - `app:salescloud account:"[specific account name]"` for individual accounts
-- `app:salescloud aeowner:"[current user name]"` if the filter is available
+- `app:salescloud aeowner:"[USER_FULL_NAME]"` if the filter is available
+- `app:salescloud owneremail:"[USER_EMAIL]"` as a backup if name-based filtering is inconsistent
 
 **Filter criteria (apply when parsing results):**
 - Stage must be one of: 2-Assessing Problem & Value, 3-Validating Fit & Differentiating, 4-Developing Mutual Close Plan, 5-Firming Demand Terms Timing, 6-Verbal Agreement, 7-Pending
@@ -61,10 +83,9 @@ If Glean cannot surface contact-level detail, search Glean for each account name
 ## Layer 2: Per-Deal Analysis (Sub-Agents)
 
 **Step 1: Classify every deal.** Before dispatching any sub-agents, compare the Salesforce deal list (Layer 1) against the existing Notion "Pipeline Intelligence" database. Each deal falls into exactly one bucket:
-
 - **Existing deal** — has a Notion row. Read its content (evidence summary, last updated date, previous field values, source URLs from the detail page).
 - **New deal** — in Salesforce but has NO Notion row. This is a new opportunity that was added since the last run.
-- **Removed deal** — has a Notion row but is NOT in this week's Salesforce pull. This deal was closed, dead-outed, or moved off Ally's pipeline.
+- **Removed deal** — has a Notion row but is NOT in this week's Salesforce pull. This deal was closed, dead-outed, or moved off [USER_FIRST_NAME]'s pipeline.
 
 **Step 2: Route to the correct sub-agent.** This routing is critical — do NOT use the wrong agent type.
 
@@ -80,11 +101,13 @@ For **existing deals**, dispatch the **deal-analyzer** with:
 - The deal's Salesforce metadata from Layer 1
 - The prior Notion dossier content (evidence summary, field values, source URLs)
 - Today's date
+- User identity payload: `user_full_name=[USER_FULL_NAME]`, `user_first_name=[USER_FIRST_NAME]`, `user_initials=[USER_INITIALS]`
 
 For **new deals**, dispatch the **deal-bootstrapper** with:
 - The deal's Salesforce metadata from Layer 1
 - Confirmation that this is a new deal — no prior dossier exists
 - Today's date
+- User identity payload: `user_full_name=[USER_FULL_NAME]`, `user_first_name=[USER_FIRST_NAME]`, `user_initials=[USER_INITIALS]`
 
 **Step 4: Collect outputs.** Each sub-agent returns a structured assessment (~500-800 tokens). Both agent types produce compatible output formats that Layer 3 can process identically.
 
@@ -103,7 +126,6 @@ After all sub-agents have returned their assessments:
 ### 3a: Pipeline Summary
 
 Using Ironclad's fiscal calendar (Q1=Feb-Apr, Q2=May-Jul, Q3=Aug-Oct, Q4=Nov-Jan), produce:
-
 - **Pipeline by quarter:** Total ARR per fiscal quarter based on close dates
 - **Deals by stage:** Count and total ARR per stage
 - **Deals by forecast category:** Count and total ARR for Omitted, Pipeline, Best Case, Commit
@@ -126,6 +148,7 @@ Generate the Ironclad-branded pipeline intelligence report. **Recommended order:
 - For each deal, include `"notion_url"` — the URL of the deal's Notion detail page. If writing to Notion in Layer 3c happens BEFORE report generation, use the Notion page URL returned when creating/updating the row. If the report is generated first, leave `notion_url` empty and update the HTML after Notion writes are complete. The report renders a "View in Notion" link next to each deal name when this field is populated.
 
 **Step 2: Run the report generator.** Execute:
+
 ```bash
 python3 scripts/generate_report.py \
     --mode [bootstrap|weekly] \
@@ -139,7 +162,7 @@ This produces two files:
 - `pipeline-intelligence-[date].html` — self-contained HTML with embedded Ironclad fonts and logo
 - `pipeline-intelligence-[date].pdf` — PDF version for sharing/archiving
 
-**Step 3: Save to Google Drive.** Upload the PDF to a "Pipeline Intelligence" folder in Google Drive so [current user name]has a running archive of weekly snapshots.
+**Step 3: Save to Google Drive.** Upload the PDF to a "Pipeline Intelligence" folder in Google Drive so [USER_FIRST_NAME] has a running archive of weekly snapshots.
 
 The report format is identical every run — same layout, same branding, same section order. Bootstrap reports include DEAL TRAJECTORY, PRICING HISTORY, and KEY MILESTONES sections. Weekly reports omit those (they're in the baseline) and focus on changes since last run.
 
@@ -173,13 +196,16 @@ After report generation and Notion updates are complete, produce a summary:
 
 ```
 Pipeline Intelligence updated — [today's date]
+Owner: [USER_FULL_NAME]
 
 Deals analyzed: [count] ([X] existing + [Y] new this week)
 Deals archived: [count] — [list account names + reason]
 Deals needing field updates: [count]
+
 ARR mismatches found: [count] — [list account names]
 Close date mismatches: [count] — [list account names]
 Deals to dead out: [count] — [list account names]
+
 Recommended ML call: $[amount]
 
 Reports: [link to HTML] | [link to PDF]
@@ -187,7 +213,7 @@ Active pipeline: [link to Pipeline Intelligence database]
 Closed deals archive: [link to Closed Deals database]
 ```
 
-If Slack is connected, send this to Ally's preferred channel. Otherwise, display it in Cowork.
+If Slack is connected, send this to [USER_FIRST_NAME]'s preferred channel. Otherwise, display it in Cowork.
 
 ---
 
@@ -200,8 +226,8 @@ The weekly `/run-forecast` command REQUIRES an existing Notion database. If no d
 The bootstrap process:
 1. Creates the "Pipeline Intelligence" Notion database with the full schema
 2. Creates the "Closed Deals" archive database with the same schema + Archive fields
-3. Pulls all open deals from Salesforce
-4. Dispatches the **deal-bootstrapper** sub-agent (not deal-analyzer) for each deal — 90-day lookback, deep historical analysis, pricing history, deal trajectory
+3. Pulls all open deals from Salesforce (filtered to [USER_FULL_NAME]'s ownership)
+4. Dispatches the **deal-bootstrapper** sub-agent (not deal-analyzer) for each deal — 90-day lookback, deep historical analysis, pricing history, deal trajectory — passing the user identity payload
 5. Creates a Notion row per deal with comprehensive baseline data
 6. Creates linked detail pages with the initial assessment
 
@@ -222,12 +248,10 @@ You do NOT need to re-run `/bootstrap-pipeline` when new deals appear. The weekl
 ## Ad-Hoc Single Deal Mode
 
 When the user provides a specific account name instead of running the full pipeline:
-
 1. Pull that deal's Salesforce data from Glean
 2. Check Notion for prior dossier
-3. Dispatch one deal-analyzer sub-agent
+3. Dispatch one deal-analyzer sub-agent (with the user identity payload)
 4. Write/update the Notion row for that deal
 5. Display the assessment directly in Cowork
 
 Skip the pipeline summary and notification steps.
-
