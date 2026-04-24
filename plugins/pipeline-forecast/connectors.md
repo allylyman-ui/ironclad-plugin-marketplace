@@ -41,5 +41,5 @@ Before running any command in this plugin:
 
 ## Notes
 
-- **No direct Salesforce MCP.** All Salesforce reads happen through Glean. Field updates produced by the sub-agents are returned as copy-paste-ready text blocks for Ally to paste into Salesforce manually.
+- **No direct Salesforce MCP.** All Salesforce reads happen through Glean's `app:salescloud`. Field updates produced by the sub-agents are returned as copy-paste-ready text blocks for Ally to paste into Salesforce manually.
 - **No direct Gong MCP.** All Gong call evidence comes through Glean's `app:gong` filter.
