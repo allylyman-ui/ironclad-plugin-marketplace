@@ -1,0 +1,23 @@
+{
+  "name": "ironclad-plugin-marketplace",
+  "owner": {
+    "name": "Ally Lyman",
+    "email": "ally.lyman@ironcladhq.com"
+  },
+  "metadata": {
+    "description": "Ironclad internal Claude Code plugins",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "ironclad-branding",
+      "source": "ironclad-branding",
+      "description": "Ironclad brand guidelines skill for creating on-brand assets — HTML pages, presentations, one-pagers, social posts, landing pages, event banners, email templates, and any visual content for Ironclad."
+    },
+    {
+      "name": "pipeline-forecast",
+      "source": "pipeline-forecast",
+      "description": "Pipeline intelligence plugin for Ironclad mid-market sales. Provides /bootstrap-pipeline (first-time Notion dossier build), /run-forecast (weekly incremental updates), and /analyze-deal (single-deal ad-hoc analysis). Dispatches sub-agents per deal to prevent context degradation."
+    }
+  ]
+}
