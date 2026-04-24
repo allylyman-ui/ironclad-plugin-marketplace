@@ -1,0 +1,11 @@
+{
+  "name": "pipeline-forecast",
+  "version": "1.0.0",
+  "description": "Pipeline intelligence plugin for Ironclad sales. Two modes: (1) /bootstrap-pipeline for first-time setup — creates Notion database and builds deep 90-day dossiers for every deal. (2) /run-forecast for weekly runs — reads prior Notion dossiers, looks back 7 days, updates incrementally. Both modes dispatch sub-agents with isolated context windows (one per deal) to prevent quality degradation across 30-40 deals. Also supports /analyze-deal for single-deal ad-hoc analysis.",
+  "author": {
+    "name": "Ally Lyman",
+    "email": "ally.lyman@ironcladhq.com"
+  },
+  "license": "Internal-Use-Only",
+  "keywords": ["ironclad", "sales", "forecast", "pipeline", "internal"]
+}
