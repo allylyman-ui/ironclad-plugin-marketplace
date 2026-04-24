@@ -1,0 +1,11 @@
+{
+  "name": "ironclad-branding",
+  "version": "1.0.0",
+  "description": "Ironclad brand guidelines skill for creating on-brand assets — HTML pages, presentations, one-pagers, social posts, landing pages, event banners, email templates, and any visual content for Ironclad. Ensures correct colors, typography, tone, and layout patterns from the official Ironclad Brand Guide.",
+  "author": {
+    "name": "Ally Lyman",
+    "email": "ally.lyman@ironcladhq.com"
+  },
+  "license": "Internal-Use-Only",
+  "keywords": ["ironclad", "branding", "design", "brand-guide", "internal"]
+}
