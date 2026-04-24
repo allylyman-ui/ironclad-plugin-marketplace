@@ -10,11 +10,11 @@
     },
     "google drive": {
       "type": "http",
-      "url": "https://bigquery.googleapis.com/mcp"
+      "url": ""
     },
     "notion": {
       "type": "http",
-      "url": "https://app.hex.tech/mcp"
+      "url": ""
     },
     "glean": {
       "type": "http",
