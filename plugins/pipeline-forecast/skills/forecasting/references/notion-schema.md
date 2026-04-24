@@ -1,5 +1,7 @@
 # Notion Database Schema: Pipeline Intelligence
 
+> **Note on user tokens:** This reference file uses `[USER_INITIALS]` where the original hardcoded "AL". The lead `forecasting` skill resolves this token in its Step 0 (Resolve the Runtime User) block before reading this file. If the runtime user is Ally Lyman, `[USER_INITIALS]` → `AL`; if Jamie Smith, `[USER_INITIALS]` → `JS`. Do NOT leave the literal `[USER_INITIALS]` token in any Notion property value — always substitute.
+
 ## Database Properties
 
 | Property | Type | Purpose |
@@ -18,9 +20,9 @@
 | Forecast Category | Select | Current: Omitted, Pipeline, Best Case, Commit |
 | Recommended Category | Select | Based on evidence |
 | Quarter | Select | Ironclad fiscal quarter: Q1-FY27, Q2-FY27, Q3-FY27, Q4-FY27, etc. |
-| Next Steps | Rich Text | Copy-paste ready, AL format |
+| Next Steps | Rich Text | Copy-paste ready, [USER_INITIALS] format |
 | Sales Notes | Rich Text | Copy-paste ready, running log preserved |
-| Red Flags | Rich Text | Copy-paste ready, AL format |
+| Red Flags | Rich Text | Copy-paste ready, [USER_INITIALS] format |
 | Evidence Summary | Rich Text | Condensed Gong/Email/Calendar/Drive findings |
 | Last Updated | Date | Date of this analysis run |
 | Status | Select | Active, Needs Update, Dead Out Candidate, Closed/Removed |
@@ -53,5 +55,5 @@
 Before dispatching a sub-agent for a deal, the lead agent should:
 1. Search the Pipeline Intelligence database for a row where Deal Name matches the account name
 2. If found, read the row's properties (especially Evidence Summary, Last Updated, Next Steps, Sales Notes, Red Flags)
-3. Pass this to the sub-agent as "prior dossier" context
+3. Pass this to the sub-agent as "prior dossier" context, including the resolved user tokens (`user_full_name`, `user_first_name`, `user_initials`) so the sub-agent uses the correct initials in its field outputs
 4. The sub-agent uses this to produce a "Changes Since Last Run" section
