@@ -37,7 +37,7 @@ Search Glean for open Salesforce opportunities using precise filter syntax (no s
 
 This should return Ally's open opportunities. If results are too broad or too large, narrow with:
 - `app:salescloud account:"[specific account name]"` for individual accounts
-- `app:salescloud aeowner:"[current user name]Lyman"` if the filter is available
+- `app:salescloud aeowner:"[current user name]"` if the filter is available
 
 **Filter criteria (apply when parsing results):**
 - Stage must be one of: 2-Assessing Problem & Value, 3-Validating Fit & Differentiating, 4-Developing Mutual Close Plan, 5-Firming Demand Terms Timing, 6-Verbal Agreement, 7-Pending
